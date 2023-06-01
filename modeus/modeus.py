@@ -21,8 +21,8 @@ month = {
 }
 
 load_dotenv()
-cookies_env = os.getenv('MODEUS_COOKIE')
-cookies = ast.literal_eval(cookies_env)
+# cookies_env = os.getenv('MODEUS_COOKIE')
+# cookies = ast.literal_eval(cookies_env)
 headers_env = os.getenv("MODEUS_HEADERS")
 headers = ast.literal_eval(headers_env)
 
@@ -33,15 +33,17 @@ json_data_for_id_search = {
 }
 
 week_day = datetime.now().weekday()
+today = datetime.now().date()
 time_delta = timedelta(days=week_day)
 date_min = datetime.now().date() - time_delta
 time_delta = timedelta(days=6-week_day)
 date_max = datetime.now().date() + time_delta
 
+
 json_data_for_lession_parsing = {
     'size': 500,
-    'timeMin': f'{date_min}T00:00:00+05:00',
-    'timeMax': f'{date_max}T23:59:59+05:00',
+    'timeMin': f'{today}T00:00:00+05:00',
+    'timeMax': f'{today}T23:59:59+05:00',
     'attendeePersonId': [
         '05f08994-60bb-431f-9a8a-e3fd4b35ae0b',
     ],
@@ -49,13 +51,13 @@ json_data_for_lession_parsing = {
 
 def get_json_id(fio):
     json_data_for_id_search['fullName'] = fio
-    response = requests.post('https://utmn.modeus.org/schedule-calendar-v2/api/people/persons/search', cookies=cookies, headers=headers, json=json_data_for_id_search).json()
+    response = requests.post('https://utmn.modeus.org/schedule-calendar-v2/api/people/persons/search', headers=headers, json=json_data_for_id_search).json()
     json_id = response['_embedded']['persons'][0]['id']
     return str(json_id)
 
 def get_rasps(fio):
     json_data_for_lession_parsing['attendeePersonId'] = [get_json_id(fio)]
-    response = requests.post('https://utmn.modeus.org/schedule-calendar-v2/api/calendar/events/search?tz=Asia/Tyumen&authAction=', cookies=cookies, headers=headers, json=json_data_for_lession_parsing).json()
+    response = requests.post('https://utmn.modeus.org/schedule-calendar-v2/api/calendar/events/search?tz=Asia/Tyumen&authAction=', headers=headers, json=json_data_for_lession_parsing).json()
 
     paras = []
     # проход по всем парам
@@ -98,7 +100,7 @@ def get_rasps(fio):
         weekly_days_sorted.add(i[2].split('.')[0])
         weekly_days_sorted = list(weekly_days_sorted)
     weekly_days_sorted.sort()
-
+    
     times_sorted = []
     for i in paras:
         times_sorted = set(times_sorted)
@@ -115,18 +117,17 @@ def get_rasps(fio):
 
     weekly_days_sorted_clone = []
 
-    json_data_for_lession_parsing['attendeePersonId'] = get_json_id(fio)
     res = ''
     current_month = month[datetime.now().month]
     for i in weekly_days_sorted:
         weekly_days_sorted_clone.append(i)
     for para in paras_sorted_by_days_and_time:
         if para[2].split('.')[0] in weekly_days_sorted_clone:
-            res += ('\n' + '-------------------------------------------\n\n' + (para[2].split('.')[0] + ' ' + current_month + ':')) + '\n\n'
+            # res += ((para[2].split('.')[0] + ' ' + current_month + ':')) + '\n\n'
+            res += 'Вот ваши пары на сегодня:' + '\n\n'
             weekly_days_sorted_clone.remove(para[2].split('.')[0])
-        res += (para[0] + ' ' + para[2] + ' ' + (para[3] + ' — ' + para[4]) + ' ' + para[1]) + '\n' 
-    res += '\n-------------------------------------------'
+        res += (para[0].replace('/', '|') + ' | ' + para[2] + ' | ' + (para[3] + ' — ' + para[4]) + ' | ' + para[1]) + '\n' 
     return res
 
 if __name__ == '__main__':
-    print(get_rasps(input('Введи своё ФИО: ')))
+    print(get_rasps('Алиев Вагиф Таирович'))
