@@ -91,35 +91,47 @@ async def unsignup_user(callback_query):
 @router.callback_query(MyCallback.filter(F.action == "get_back"))
 async def get_back(callback_query):
     await callback_query.message.answer(
-        "Привет!", reply_markup=get_work_buttons()
+        "И снова здравствуйте, что вы хотите проверить на этот раз?", reply_markup=get_work_buttons()
     )
 
 
 @router.message(F.text.startswith("/ftd"))  # [2]
 async def check_friends(message):
-    msg = await message.answer(
-        "Происходит сравнение расписаний, пожалуйста, подождите."
-    )
     text = message.text[5:]
-    fullname = check_user(message.from_user.id)
-    friends_fullnames = text.split(",")
-    print(friends_fullnames)
-    optimal = find_optimal(fullname, friends_fullnames, tomorrow=False)
+    if ',' not in text and len(text.split(' ')) > 3:
+        await message.answer(
+            "Кажется, вы ошиблись при вводе. Убедитесь, что перечислили ФИО через запятую.",
+            reply_markup=get_backs(),
+        )
+    else:
+        msg = await message.answer(
+            "Происходит сравнение расписаний, пожалуйста, подождите."
+        )
+        fullname = check_user(message.from_user.id)
+        friends_fullnames = text.split(",")
+        print(friends_fullnames)
+        optimal = find_optimal(fullname, friends_fullnames, tomorrow=False)
 
-    await msg.edit_text(optimal, reply_markup=get_work_buttons())
+        await msg.edit_text(optimal, reply_markup=get_work_buttons())
 
 
 @router.message(F.text.startswith("/ftm"))  # [2]
 async def check_friends(message):
-    msg = await message.answer(
-        "Происходит сравнение расписаний, пожалуйста, подождите."
-    )
     text = message.text[5:]
-    fullname = check_user(message.from_user.id)
-    friends_fullnames = text.split(",")
-    optimal = find_optimal(fullname, friends_fullnames, tomorrow=True)
+    if ',' not in text and len(text.split(' ')) > 3:
+        await message.answer(
+            "Кажется, вы ошиблись при вводе. Убедитесь, что перечислили ФИО через запятую.",
+            reply_markup=get_backs(),
+        )
+    else:
+        msg = await message.answer(
+            "Происходит сравнение расписаний, пожалуйста, подождите."
+        )
+        fullname = check_user(message.from_user.id)
+        friends_fullnames = text.split(",")
+        optimal = find_optimal(fullname, friends_fullnames, tomorrow=True)
 
-    await msg.edit_text(optimal, reply_markup=get_work_buttons())
+        await msg.edit_text(optimal, reply_markup=get_work_buttons())
 
 
 @router.message(F.text)  # [2]
