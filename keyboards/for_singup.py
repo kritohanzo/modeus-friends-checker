@@ -1,8 +1,16 @@
-from aiogram.types import ReplyKeyboardMarkup
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.filters.callback_data import CallbackData
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-def get_signup_button() -> ReplyKeyboardMarkup:
-    kb = ReplyKeyboardBuilder()
-    kb.button(text='Указать своё ФИО 😊')
-    kb.adjust(1)
+
+class MyCallback(CallbackData, prefix="my"):
+    action: str
+
+
+def get_signup_button():
+    kb = InlineKeyboardBuilder()
+    kb.button(
+        text="Указать своё ФИО 😊",
+        callback_data=MyCallback(action="signup").pack(),
+    )
+    kb.adjust(3)
     return kb.as_markup(resize_keyboard=True)

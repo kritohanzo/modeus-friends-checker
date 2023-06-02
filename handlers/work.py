@@ -1,56 +1,137 @@
-from aiogram import Router, F
-from aiogram.filters import Command
-from aiogram.filters.text import Text
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram import F, Router
+from aiogram.filters.callback_data import CallbackData
+from database.database_functions import check_user, delete_user
+from keyboards.for_singup import get_signup_button
+from keyboards.for_work import (
+    get_backs, get_friends_today_or_tomorrow_buttons,
+    get_me_today_or_tomorrow_buttons, get_work_buttons,
+)
 from modeus.find_optimal_time import find_optimal
 from modeus.modeus import get_rasps
-from keyboards.for_singup import get_signup_button
-from keyboards.for_work import get_work_buttons
-from database_functions import delete_user, check_user
 
-router = Router()  # [1]
 
-@router.message(Text(text='Посмотреть расписание 📚'))  # [2]
-async def check_lessions(message: Message):
-    fullname = check_user(message.from_user.id)
+router = Router()
+
+
+class MyCallback(CallbackData, prefix="my"):
+    action: str
+
+
+@router.callback_query(MyCallback.filter(F.action == "get_me_schedule"))
+async def check_lessions(callback_query):
+    await callback_query.message.answer(
+        "На сегодня или на завтра?",
+        reply_markup=get_me_today_or_tomorrow_buttons(),
+    )
+
+
+@router.callback_query(MyCallback.filter(F.action == "get_me_today"))
+async def check_me_today_lessions(callback_query):
+    msg = await callback_query.message.answer(
+        "Происходит выгрузка расписания, пожалуйста, подождите 🙂"
+    )
+    fullname = check_user(callback_query.from_user.id)
     rasp = get_rasps(fullname)
-    await message.answer(
-        rasp,
-        reply_markup=get_work_buttons()
+    await msg.edit_text(rasp, reply_markup=get_work_buttons())
+
+
+@router.callback_query(MyCallback.filter(F.action == "get_me_tomorrow"))
+async def check_me_tomorrow_lessions(callback_query):
+    msg = await callback_query.message.answer(
+        "Происходит выгрузка расписания, пожалуйста, подождите 🙂"
+    )
+    fullname = check_user(callback_query.from_user.id)
+    rasp = get_rasps(fullname, tomorrow=True)
+    await msg.edit_text(rasp, reply_markup=get_work_buttons())
+
+
+@router.callback_query(
+    MyCallback.filter(F.action == "get_similarities")
+)  # [2]
+async def check_friends_lessions(callback_query):
+    await callback_query.message.answer(
+        "На сегодня или на завтра?",
+        reply_markup=get_friends_today_or_tomorrow_buttons(),
     )
 
-@router.message(Text(text='Посмотреть сходства пар друзей 🤝'))  # [2]
-async def check_friends_lessions(message: Message):
-    await message.answer(
-        "Введите ФИО ваших друзей через запятую с помощью команды /f\n\nНапример:\n/f Иванов Иван Иванович, Павлов Павел Павлович",
-        reply_markup=get_work_buttons()
+
+@router.callback_query(MyCallback.filter(F.action == "get_friends_today"))
+async def check_friends_lessions_today(callback_query):
+    await callback_query.message.answer(
+        "Введите ФИО ваших друзей через запятую с помощью команды /ftd\n\n"
+        "Например:\n/ftd Иванов Иван Иванович, Павлов Павел Павлович",
+        reply_markup=get_backs(),
     )
 
-@router.message(Text(text='Удалить своё ФИО 😞'))  # [2]
-async def unsignup_user(message: Message):
-    fullname = check_user(message.from_user.id)
+
+@router.callback_query(MyCallback.filter(F.action == "get_friends_tomorrow"))
+async def check_friends_lessions_tomorrow(callback_query):
+    await callback_query.message.answer(
+        "Введите ФИО ваших друзей через запятую с помощью команды /ftm\n\n"
+        "Например:\n/ftm Иванов Иван Иванович, Павлов Павел Павлович",
+        reply_markup=get_backs(),
+    )
+
+
+@router.callback_query(MyCallback.filter(F.action == "delete_fullname"))  # [2]
+async def unsignup_user(callback_query):
+    fullname = check_user(callback_query.from_user.id)
     if fullname:
-        delete_user(message.from_user.id)
-        await message.answer('Ваше ФИО успешно удалено', reply_markup=get_signup_button())
+        delete_user(callback_query.from_user.id)
+        await callback_query.message.answer(
+            "Ваше ФИО успешно удалено 😞", reply_markup=get_signup_button()
+        )
     else:
-        await message.answer('Вашего ФИО и так нет в базе данных', reply_markup=get_signup_button())
+        await callback_query.message.answer(
+            "Вашего ФИО и так нет в базе данных.",
+            reply_markup=get_signup_button(),
+        )
 
-@router.message(F.text.startswith('/f'))  # [2]
-async def check_friends(message: Message):
-    text = message.text[3:]
-    fullname = check_user(message.from_user.id)
-    friends_fullnames = text.split(',')
-    optimal = find_optimal(fullname, friends_fullnames)
 
-    await message.answer(
-        optimal,
-        reply_markup=get_work_buttons()
+@router.callback_query(MyCallback.filter(F.action == "get_back"))
+async def get_back(callback_query):
+    await callback_query.message.answer(
+        "Привет!", reply_markup=get_work_buttons()
     )
+
+
+@router.message(F.text.startswith("/ftd"))  # [2]
+async def check_friends(message):
+    msg = await message.answer(
+        "Происходит сравнение расписаний, пожалуйста, подождите."
+    )
+    text = message.text[5:]
+    fullname = check_user(message.from_user.id)
+    friends_fullnames = text.split(",")
+    print(friends_fullnames)
+    optimal = find_optimal(fullname, friends_fullnames, tomorrow=False)
+
+    await msg.edit_text(optimal, reply_markup=get_work_buttons())
+
+
+@router.message(F.text.startswith("/ftm"))  # [2]
+async def check_friends(message):
+    msg = await message.answer(
+        "Происходит сравнение расписаний, пожалуйста, подождите."
+    )
+    text = message.text[5:]
+    fullname = check_user(message.from_user.id)
+    friends_fullnames = text.split(",")
+    optimal = find_optimal(fullname, friends_fullnames, tomorrow=True)
+
+    await msg.edit_text(optimal, reply_markup=get_work_buttons())
+
 
 @router.message(F.text)  # [2]
-async def empty_message(message: Message):
+async def empty_message(message):
     fullname = check_user(message.from_user.id)
     if fullname:
-        await message.answer('Не понимаю вас', reply_markup=get_work_buttons())
+        await message.answer(
+            "Кажется, вы ввели несуществующую команду.",
+            reply_markup=get_work_buttons(),
+        )
     else:
-        await message.answer('Вашего ФИО нет в базе данных, нужно добавить', reply_markup=get_signup_button())
+        await message.answer(
+            "Вашего ФИО нет в базе данных. Чтобы я мог работать - его нужно добавить.",
+            reply_markup=get_signup_button(),
+        )

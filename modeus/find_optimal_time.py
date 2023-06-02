@@ -1,31 +1,165 @@
 from .modeus import get_rasps
 
+
 buildings_nearby = {
-    'УЛК-04' : ['УЛК-05', 'УЛК-11'],
-    'УЛК-05' : ['УЛК-04', 'УЛК-11'],
-    'УЛК-11' : ['УЛК-04', 'УЛК-05'],
+    "УЛК-04": [
+        "УЛК-05",
+        "УЛК-09",
+        "УЛК-10",
+        "УЛК-11",
+        "УЛК-12",
+        "УЛК-17",
+        "УЛК-10/Т9",
+        "УЛК-10/Р18",
+    ],
+    "УЛК-05": [
+        "УЛК-04",
+        "УЛК-09",
+        "УЛК-10",
+        "УЛК-11",
+        "УЛК-12",
+        "УЛК-17",
+        "УЛК-10/Т9",
+        "УЛК-10/Р18",
+    ],
+    "УЛК-09": [
+        "УЛК-04",
+        "УЛК-05",
+        "УЛК-10",
+        "УЛК-11",
+        "УЛК-12",
+        "УЛК-17",
+        "УЛК-10/Т9",
+        "УЛК-10/Р18",
+    ],
+    "УЛК-10": [
+        "УЛК-04",
+        "УЛК-05",
+        "УЛК-09",
+        "УЛК-11",
+        "УЛК-12",
+        "УЛК-17",
+        "УЛК-10/Т9",
+        "УЛК-10/Р18",
+    ],
+    "УЛК-11": [
+        "УЛК-04",
+        "УЛК-05",
+        "УЛК-09",
+        "УЛК-10",
+        "УЛК-12",
+        "УЛК-17",
+        "УЛК-10/Т9",
+        "УЛК-10/Р18",
+    ],
+    "УЛК-12": [
+        "УЛК-04",
+        "УЛК-05",
+        "УЛК-09",
+        "УЛК-10",
+        "УЛК-11",
+        "УЛК-17",
+        "УЛК-10/Т9",
+        "УЛК-10/Р18",
+    ],
+    "УЛК-17": [
+        "УЛК-04",
+        "УЛК-05",
+        "УЛК-09",
+        "УЛК-10",
+        "УЛК-11",
+        "УЛК-12",
+        "УЛК-10/Т9",
+        "УЛК-10/Р18",
+    ],
+    "УЛК-10/Т9": [
+        "УЛК-04",
+        "УЛК-05",
+        "УЛК-09",
+        "УЛК-10",
+        "УЛК-11",
+        "УЛК-12",
+        "УЛК-17",
+        "УЛК-10/Р18",
+    ],
+    "УЛК-10/Р18": [
+        "УЛК-04",
+        "УЛК-05",
+        "УЛК-09",
+        "УЛК-10",
+        "УЛК-11",
+        "УЛК-12",
+        "УЛК-17",
+        "УЛК-10/Т9",
+    ],
+    "УЛК-13": ["ЦЗВС"],
+    "ЦЗВС": ["УЛК-13"],
+    "УЛК-07": ["УЛК-07 СК"],
+    "УЛК-07 СК": ["УЛК-07"],
 }
 
-def find_optimal(me, friends_fullnames):
+building_names = {
+    "УЛК-01": "ИФиЖ",
+    "УЛК-03": "ИнЗем",
+    "УЛК-04": "ФЭИ",
+    "УЛК-05": "ИМиКН",
+    "УЛК-06": "ИнБио",
+    "УЛК-07": "СК Олимпия",
+    "УЛК-09": "СОК",
+    "УЛК-10": "ИГиП",
+    "УЛК-11": "СоцГум",
+    "УЛК-12": "Библиотека ТюмГУ",
+    "УЛК-13": "Центр зимвних видов спорта ТюмГУ (экопарк)",
+    "УЛК-16": "ИПиП",
+    "УЛК-17": "ИЭиСБ",
+    "УЛК-19": "SAS",
+    "УЛК-10/Т9": "Усадьба Козлова",
+    "УЛК-10/Р18": "Усадьба Колокольниковых",
+    "ЦЗВС": "Центр зимвних видов спорта ТюмГУ (экопарк)",
+    "УЛК-07 СК": "СК Олимпия",
+}
 
-    me = get_rasps(me).split('|')
+
+def find_optimal(me, friends_fullnames, tomorrow=False):
+    me = get_rasps(me, tomorrow).split("|")
     my_lessions = []
     for i in range(len(me)):
-        if '—' in me[i]:
-            my_lessions.append((me[i].strip(), me[i+1][me[i+1].find('(')+1:me[i+1].find(')')]))
+        if "—" in me[i]:
+            my_lessions.append(
+                (
+                    me[i].strip(),
+                    me[i + 1][me[i + 1].find("(") + 1: me[i + 1].find(")")],
+                )
+            )
 
-
-    lessons = [(fullname + "|" + get_rasps(fullname)).split('|') for fullname in friends_fullnames]
+    lessons = [
+        (fullname + "|" + get_rasps(fullname, tomorrow)).split("|")
+        for fullname in friends_fullnames
+    ]
 
     friends = dict()
 
     for people in lessons:
         for j in range(len(people)):
-            if '—' in people[j]:
+            if "—" in people[j]:
                 if people[0] in friends.keys():
-                    friends[people[0]] += [(people[j].strip(), people[j+1][people[j+1].find('(')+1:people[j+1].find(')')])]
+                    friends[people[0]] += [
+                        (
+                            people[j].strip(),
+                            people[j + 1][
+                                people[j + 1].find("(") + 1: people[j + 1].find(")")
+                            ],
+                        )
+                    ]
                 else:
-                    friends[people[0]] = [(people[j].strip(), people[j+1][people[j+1].find('(')+1:people[j+1].find(')')])]
+                    friends[people[0]] = [
+                        (
+                            people[j].strip(),
+                            people[j + 1][
+                                people[j + 1].find("(") + 1: people[j + 1].find(")")
+                            ],
+                        )
+                    ]
 
     result = []
 
@@ -33,7 +167,15 @@ def find_optimal(me, friends_fullnames):
         for friend in friends.keys():
             for friend_lession in friends[friend]:
                 if friend_lession[0] == my_lession[0]:
-                    if my_lession[0] in buildings_nearby[friend_lession[1]] or friend_lession[1] == my_lession[1]:
-                        result.append(f'{friend.strip()} может встретиться с тобой после твоей пары в {my_lession[0].split("—")[0]}.\nОн тоже в это время будет на паре в корпусе {friend_lession[1]}')
-
-    return "\n\n".join(result)
+                    if (
+                        my_lession[1] in buildings_nearby[friend_lession[1]]
+                        or friend_lession[1] == my_lession[1]
+                    ):
+                        result.append(
+                            f'«{friend.strip()}» может встретиться с тобой после твоей пары '
+                            f'в «{my_lession[0].split("—")[0].strip()[:-3]}», он(а) тоже в это '
+                            f'время будет на паре в корпусе «{building_names[friend_lession[1]]}».'
+                        )
+    if result:
+        return "\n\n".join(result)
+    return "Совпадений с этими друзьями нет, увы."
