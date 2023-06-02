@@ -19,7 +19,6 @@ def connect_control(func) -> None:
 
     return wrapper
 
-
 @connect_control
 def add_user(id: int, full_name: str, cursor: sqlite3.Cursor):
     cursor.execute(
@@ -47,10 +46,9 @@ def check_user(id: int, cursor: sqlite3.Cursor):
         return cursor[0]
     return False
 
+@connect_control
+def create_db(cursor: sqlite3.Cursor):
+    cursor.execute("""CREATE TABLE IF NOT EXISTS users(tg_id int, full_name char);""")
 
 if __name__ == "__main__":
-    connection = sqlite3.connect(db_name)
-    cursor = connection.cursor()
-    cursor.execute("""CREATE TABLE users(tg_id int, full_name char);""")
-    connection.commit()
-    connection.close()
+    create_db()

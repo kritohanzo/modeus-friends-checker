@@ -33,7 +33,6 @@ async def cmd_start(message: Message):
 @router.callback_query(MyCallback.filter(F.action == "signup"))
 async def handle(callback_query):
     fullname = check_user(callback_query.from_user.id)
-    print(fullname)
     if fullname:
         await callback_query.message.answer(
             "Вы уже есть в базе данных, приятного пользования 😉",
@@ -49,7 +48,6 @@ async def handle(callback_query):
 @router.message(F.text.startswith("/me"))
 async def answer_fullname(message: Message):
     text = message.text[4:]
-    print(text.split(" "))
     if check_user(message.from_user.id):
         await message.answer(
             "Вы уже есть в базе данных, приятного пользования 😉",

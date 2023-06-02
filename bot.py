@@ -2,6 +2,7 @@ import asyncio
 import os
 
 from aiogram import Bot, Dispatcher
+from database.database_functions import create_db
 from dotenv import load_dotenv
 from handlers import singup, work
 
@@ -14,6 +15,8 @@ async def main():
 
     dp.include_routers(singup.router)
     dp.include_routers(work.router)
+
+    create_db()
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)

@@ -19,58 +19,94 @@ class MyCallback(CallbackData, prefix="my"):
 
 @router.callback_query(MyCallback.filter(F.action == "get_me_schedule"))
 async def check_lessions(callback_query):
-    await callback_query.message.answer(
-        "На сегодня или на завтра?",
-        reply_markup=get_me_today_or_tomorrow_buttons(),
+    if not check_user(callback_query.from_user.id):
+        await callback_query.message.answer(
+            "Вашего ФИО нет в базе данных. Чтобы я мог работать - его нужно добавить.",
+            reply_markup=get_signup_button(),
+        )
+    else:
+        await callback_query.message.answer(
+            "На сегодня или на завтра?",
+            reply_markup=get_me_today_or_tomorrow_buttons(),
     )
 
 
 @router.callback_query(MyCallback.filter(F.action == "get_me_today"))
 async def check_me_today_lessions(callback_query):
-    msg = await callback_query.message.answer(
-        "Происходит выгрузка расписания, пожалуйста, подождите 🙂"
-    )
-    fullname = check_user(callback_query.from_user.id)
-    rasp = get_rasps(fullname)
-    await msg.edit_text(rasp, reply_markup=get_work_buttons())
+    if not check_user(callback_query.from_user.id):
+        await callback_query.message.answer(
+            "Вашего ФИО нет в базе данных. Чтобы я мог работать - его нужно добавить.",
+            reply_markup=get_signup_button(),
+        )
+    else:
+        msg = await callback_query.message.answer(
+            "Происходит выгрузка расписания, пожалуйста, подождите 🙂"
+        )
+        fullname = check_user(callback_query.from_user.id)
+        rasp = get_rasps(fullname)
+        await msg.edit_text(rasp, reply_markup=get_work_buttons())
 
 
 @router.callback_query(MyCallback.filter(F.action == "get_me_tomorrow"))
 async def check_me_tomorrow_lessions(callback_query):
-    msg = await callback_query.message.answer(
-        "Происходит выгрузка расписания, пожалуйста, подождите 🙂"
-    )
-    fullname = check_user(callback_query.from_user.id)
-    rasp = get_rasps(fullname, tomorrow=True)
-    await msg.edit_text(rasp, reply_markup=get_work_buttons())
+    if not check_user(callback_query.from_user.id):
+        await callback_query.message.answer(
+            "Вашего ФИО нет в базе данных. Чтобы я мог работать - его нужно добавить.",
+            reply_markup=get_signup_button(),
+        )
+    else:
+        msg = await callback_query.message.answer(
+            "Происходит выгрузка расписания, пожалуйста, подождите 🙂"
+        )
+        fullname = check_user(callback_query.from_user.id)
+        rasp = get_rasps(fullname, tomorrow=True)
+        await msg.edit_text(rasp, reply_markup=get_work_buttons())
 
 
 @router.callback_query(
     MyCallback.filter(F.action == "get_similarities")
-)  # [2]
+)
 async def check_friends_lessions(callback_query):
-    await callback_query.message.answer(
-        "На сегодня или на завтра?",
-        reply_markup=get_friends_today_or_tomorrow_buttons(),
-    )
+    if not check_user(callback_query.from_user.id):
+        await callback_query.message.answer(
+            "Вашего ФИО нет в базе данных. Чтобы я мог работать - его нужно добавить.",
+            reply_markup=get_signup_button(),
+        )
+    else:
+        await callback_query.message.answer(
+            "На сегодня или на завтра?",
+            reply_markup=get_friends_today_or_tomorrow_buttons(),
+        )
 
 
 @router.callback_query(MyCallback.filter(F.action == "get_friends_today"))
 async def check_friends_lessions_today(callback_query):
-    await callback_query.message.answer(
-        "Введите ФИО ваших друзей через запятую с помощью команды /ftd\n\n"
-        "Например:\n/ftd Иванов Иван Иванович, Павлов Павел Павлович",
-        reply_markup=get_backs(),
-    )
+    if not check_user(callback_query.from_user.id):
+        await callback_query.message.answer(
+            "Вашего ФИО нет в базе данных. Чтобы я мог работать - его нужно добавить.",
+            reply_markup=get_signup_button(),
+        )
+    else:
+        await callback_query.message.answer(
+            "Введите ФИО ваших друзей через запятую с помощью команды /ftd\n\n"
+            "Например:\n/ftd Иванов Иван Иванович, Павлов Павел Павлович",
+            reply_markup=get_backs(),
+        )
 
 
 @router.callback_query(MyCallback.filter(F.action == "get_friends_tomorrow"))
 async def check_friends_lessions_tomorrow(callback_query):
-    await callback_query.message.answer(
-        "Введите ФИО ваших друзей через запятую с помощью команды /ftm\n\n"
-        "Например:\n/ftm Иванов Иван Иванович, Павлов Павел Павлович",
-        reply_markup=get_backs(),
-    )
+    if not check_user(callback_query.from_user.id):
+        await callback_query.message.answer(
+            "Вашего ФИО нет в базе данных. Чтобы я мог работать - его нужно добавить.",
+            reply_markup=get_signup_button(),
+        )
+    else:
+        await callback_query.message.answer(
+            "Введите ФИО ваших друзей через запятую с помощью команды /ftm\n\n"
+            "Например:\n/ftm Иванов Иван Иванович, Павлов Павел Павлович",
+            reply_markup=get_backs(),
+        )
 
 
 @router.callback_query(MyCallback.filter(F.action == "delete_fullname"))  # [2]
@@ -109,7 +145,6 @@ async def check_friends(message):
         )
         fullname = check_user(message.from_user.id)
         friends_fullnames = text.split(",")
-        print(friends_fullnames)
         optimal = find_optimal(fullname, friends_fullnames, tomorrow=False)
 
         await msg.edit_text(optimal, reply_markup=get_work_buttons())
