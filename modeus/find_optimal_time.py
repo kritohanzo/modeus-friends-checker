@@ -174,7 +174,7 @@ def find_optimal(me, friends_fullnames, tomorrow=False):
                         result.append(
                             f'«{friend.strip()}» может встретиться с тобой после твоей пары '
                             f'в «{my_lession[0].split("—")[0].strip()}», он(а) тоже в это '
-                            f'время будет на паре в корпусе «{building_names[friend_lession[1]]}».'
+                            f'время будет на паре, в корпусе «{building_names[friend_lession[1]]}».'
                         )
     if result:
         return "\n\n".join(result)
