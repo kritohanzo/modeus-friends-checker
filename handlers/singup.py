@@ -48,6 +48,7 @@ async def handle(callback_query):
 @router.message(F.text.startswith("/me"))
 async def answer_fullname(message: Message):
     text = message.text[4:]
+    print(text)
     if check_user(message.from_user.id):
         await message.answer(
             "Вы уже есть в базе данных, приятного пользования 😉",

@@ -134,6 +134,7 @@ async def get_back(callback_query):
 @router.message(F.text.startswith("/ftd"))  # [2]
 async def check_friends(message):
     text = message.text[5:]
+    print(text)
     if ',' not in text and len(text.split(' ')) > 3:
         await message.answer(
             "Кажется, вы ошиблись при вводе. Убедитесь, что перечислили ФИО через запятую.",
@@ -153,6 +154,7 @@ async def check_friends(message):
 @router.message(F.text.startswith("/ftm"))  # [2]
 async def check_friends(message):
     text = message.text[5:]
+    print(text)
     if ',' not in text and len(text.split(' ')) > 3:
         await message.answer(
             "Кажется, вы ошиблись при вводе. Убедитесь, что перечислили ФИО через запятую.",
